@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Playnite.SDK;
+using RewasdProfileSwitcher.Core.Gamepads;
 using RewasdProfileSwitcher.Core.Rewasd;
+using RewasdProfileSwitcher.Playnite.Gamepads;
 
 namespace RewasdProfileSwitcher.Playnite.Settings
 {
@@ -187,9 +189,52 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             }
         }
 
+        /// <summary>
+        /// Offers a picker of currently-connected gamepads (see
+        /// <see cref="GamepadDetector"/>) to prefill the new device's name —
+        /// this has nothing to do with reWASD's own Device ID, which still
+        /// has to be pasted in by hand (reWASD doesn't expose it outside its
+        /// own GUI). Falls back to today's blank-name device when no
+        /// gamepad is detected, or when the user picks "Add manually".
+        /// </summary>
         private void AddDevice()
         {
-            var device = new RewasdDeviceRow(Guid.NewGuid(), ResourceProvider.GetString("LOCRewasdNewDeviceName"), "", "", "slot1");
+            List<DetectedGamepad> detected;
+            try
+            {
+                detected = GamepadDetector.GetConnectedGamepads();
+            }
+            catch
+            {
+                detected = new List<DetectedGamepad>();
+            }
+
+            if (detected.Count == 0)
+            {
+                AddDeviceWithName(ResourceProvider.GetString("LOCRewasdNewDeviceName"));
+                return;
+            }
+
+            var initialItems = detected
+                .Select(g => (GenericItemOption)new GamepadPickerOption(g, GamepadVendorLookup.BuildDisplayName(g.VendorId, g.ProductName)))
+                .ToList();
+            initialItems.Add(new GamepadPickerOption(null, ResourceProvider.GetString("LOCRewasdAddDeviceManually")));
+
+            var chosen = _plugin.PlayniteApi.Dialogs.ChooseItemWithSearch(
+                initialItems,
+                query => initialItems.Where(i => i.Name.IndexOf(query ?? "", StringComparison.OrdinalIgnoreCase) >= 0).ToList(),
+                "",
+                ResourceProvider.GetString("LOCRewasdDevicePickerCaption"));
+
+            if (chosen is GamepadPickerOption picked)
+            {
+                AddDeviceWithName(picked.Gamepad != null ? picked.Name : ResourceProvider.GetString("LOCRewasdNewDeviceName"));
+            }
+        }
+
+        private void AddDeviceWithName(string displayName)
+        {
+            var device = new RewasdDeviceRow(Guid.NewGuid(), displayName, "", "", "slot1");
             Devices.Add(device);
             SelectedDevice = device;
         }
@@ -330,6 +375,17 @@ namespace RewasdProfileSwitcher.Playnite.Settings
         {
             errors = new List<string>();
             return true;
+        }
+
+        /// <summary>Subclassed to carry the detected gamepad (null for the "Add manually" entry) through the picker.</summary>
+        private sealed class GamepadPickerOption : GenericItemOption
+        {
+            public DetectedGamepad Gamepad { get; }
+
+            public GamepadPickerOption(DetectedGamepad gamepad, string label) : base(label, "")
+            {
+                Gamepad = gamepad;
+            }
         }
 
         /// <summary>Subclassed to carry the library's PluginId (and its plain, count-free label) through the picker, since <see cref="GenericItemOption"/> only has Name/Description.</summary>

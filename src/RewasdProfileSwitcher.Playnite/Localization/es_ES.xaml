@@ -19,6 +19,8 @@
     <sys:String x:Key="LOCRewasdSettingsAddDevice">+ Añadir dispositivo</sys:String>
     <sys:String x:Key="LOCRewasdSettingsRemoveDevice">- Quitar dispositivo</sys:String>
     <sys:String x:Key="LOCRewasdNewDeviceName">Nuevo dispositivo</sys:String>
+    <sys:String x:Key="LOCRewasdDevicePickerCaption">Elige un mando detectado, o añade uno a mano</sys:String>
+    <sys:String x:Key="LOCRewasdAddDeviceManually">Añadir a mano (escribir el nombre yo mismo)</sys:String>
 
     <!-- Ajustes: dispositivo seleccionado -->
     <sys:String x:Key="LOCRewasdSettingsDeviceNameLabel">Nombre</sys:String>

@@ -19,6 +19,8 @@
     <sys:String x:Key="LOCRewasdSettingsAddDevice">+ Add device</sys:String>
     <sys:String x:Key="LOCRewasdSettingsRemoveDevice">- Remove device</sys:String>
     <sys:String x:Key="LOCRewasdNewDeviceName">New device</sys:String>
+    <sys:String x:Key="LOCRewasdDevicePickerCaption">Pick a detected gamepad, or add one manually</sys:String>
+    <sys:String x:Key="LOCRewasdAddDeviceManually">Add manually (type the name in yourself)</sys:String>
 
     <!-- Settings: selected device -->
     <sys:String x:Key="LOCRewasdSettingsDeviceNameLabel">Name</sys:String>
