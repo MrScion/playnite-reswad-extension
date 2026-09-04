@@ -109,10 +109,13 @@ namespace RewasdProfileSwitcher.Playnite
         /// each labeled with the most common <c>Game.Source.Name</c> for
         /// that <c>PluginId</c> (falling back to the raw id when no game has
         /// a Source set). Manually-added games (<c>PluginId == Guid.Empty</c>)
-        /// get their own "no library" entry. Only libraries with at least
-        /// one game already in the database can be picked this way — there
-        /// is no other way to enumerate installed library plugins from a
-        /// GenericPlugin.
+        /// always get the fixed "no library" label instead — never a
+        /// Source-derived one, since a manually-added game can carry any
+        /// free-text Source a user chose for their own bookkeeping, and
+        /// that must not rename/hide this group. Only libraries with at
+        /// least one game already in the database can be picked this way —
+        /// there is no other way to enumerate installed library plugins
+        /// from a GenericPlugin.
         /// </summary>
         internal List<KnownLibrary> GetKnownLibraries()
         {
@@ -120,15 +123,27 @@ namespace RewasdProfileSwitcher.Playnite
                 .GroupBy(g => g.PluginId)
                 .Select(group =>
                 {
-                    var label = group
-                        .Select(g => g.Source?.Name)
-                        .FirstOrDefault(name => !string.IsNullOrEmpty(name));
-
-                    if (string.IsNullOrEmpty(label))
+                    string label;
+                    if (group.Key == Guid.Empty)
                     {
-                        label = group.Key == Guid.Empty
-                            ? ResourceProvider.GetString("LOCRewasdNoLibraryLabel")
-                            : group.Key.ToString();
+                        // Manually-added games can each carry their own free-text Source
+                        // (e.g. a user labels one "GOG" for their own bookkeeping) even
+                        // though none of them belong to an actual library plugin. Never
+                        // let an individual game's Source rename this group — it must
+                        // stay recognizable as "no library" regardless of what any single
+                        // manually-added game's Source happens to be set to.
+                        label = ResourceProvider.GetString("LOCRewasdNoLibraryLabel");
+                    }
+                    else
+                    {
+                        label = group
+                            .Select(g => g.Source?.Name)
+                            .FirstOrDefault(name => !string.IsNullOrEmpty(name));
+
+                        if (string.IsNullOrEmpty(label))
+                        {
+                            label = group.Key.ToString();
+                        }
                     }
 
                     return new KnownLibrary(group.Key, label, group.Count());
