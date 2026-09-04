@@ -15,7 +15,43 @@ namespace RewasdProfileSwitcher.Playnite.Settings
     {
         public RewasdSettingsView()
         {
-            var root = new StackPanel { Margin = new Thickness(20) };
+            var tabs = new TabControl { Margin = new Thickness(20) };
+
+            tabs.Items.Add(new TabItem
+            {
+                Header = ResourceProvider.GetString("LOCRewasdSettingsTabGeneral"),
+                Content = Scrollable(BuildGeneralTab()),
+            });
+
+            tabs.Items.Add(new TabItem
+            {
+                Header = ResourceProvider.GetString("LOCRewasdSettingsTabDevices"),
+                Content = Scrollable(BuildDevicesTab()),
+            });
+
+            tabs.Items.Add(new TabItem
+            {
+                Header = ResourceProvider.GetString("LOCRewasdSettingsTabProfiles"),
+                Content = Scrollable(BuildProfilesTab()),
+            });
+
+            Content = tabs;
+        }
+
+        private static ScrollViewer Scrollable(UIElement content)
+        {
+            return new ScrollViewer
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Content = content,
+                Margin = new Thickness(0, 12, 0, 0),
+            };
+        }
+
+        /// <summary>Extension name/intro, the master on/off switch, and the shared reWASD CLI tool path.</summary>
+        private static StackPanel BuildGeneralTab()
+        {
+            var root = new StackPanel();
 
             root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsHeader")));
             root.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsHint")));
@@ -28,42 +64,24 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsCliHeader")));
             root.Children.Add(BuildFileRow(nameof(RewasdSettingsViewModel.CliPath), nameof(RewasdSettingsViewModel.BrowseCliCommand)));
 
-            root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsDevicesHeader"), new Thickness(0, 20, 0, 8)));
+            return root;
+        }
+
+        /// <summary>Add/remove devices, and each device's own name and reWASD Device ID.</summary>
+        private static StackPanel BuildDevicesTab()
+        {
+            var root = new StackPanel();
+
+            root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsDevicesHeader")));
             root.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsDevicesHint")));
-            root.Children.Add(BuildDevicesGrid());
 
-            Content = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = root };
-        }
-
-        private static Grid BuildDevicesGrid()
-        {
-            var grid = new Grid { Margin = new Thickness(0, 8, 0, 0) };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(20) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-            var leftPanel = BuildDeviceListPanel();
-            Grid.SetColumn(leftPanel, 0);
-            grid.Children.Add(leftPanel);
-
-            var detailPanel = BuildDeviceDetailPanel();
-            Grid.SetColumn(detailPanel, 2);
-            grid.Children.Add(detailPanel);
-
-            return grid;
-        }
-
-        private static StackPanel BuildDeviceListPanel()
-        {
-            var panel = new StackPanel();
-
-            var deviceList = new ListBox { Height = 240, DisplayMemberPath = nameof(RewasdDeviceRow.DisplayName) };
+            var deviceList = new ListBox { Height = 200, DisplayMemberPath = nameof(RewasdDeviceRow.DisplayName), Margin = new Thickness(0, 8, 0, 0) };
             deviceList.SetBinding(ItemsControl.ItemsSourceProperty, new Binding(nameof(RewasdSettingsViewModel.Devices)));
             deviceList.SetBinding(Selector.SelectedItemProperty,
                 new Binding(nameof(RewasdSettingsViewModel.SelectedDevice)) { Mode = BindingMode.TwoWay });
-            panel.Children.Add(deviceList);
+            root.Children.Add(deviceList);
 
-            var buttonsRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 0) };
+            var buttonsRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 20) };
 
             var addButton = new Button { Content = ResourceProvider.GetString("LOCRewasdSettingsAddDevice"), Padding = new Thickness(8, 4, 8, 4), Margin = new Thickness(0, 0, 8, 0) };
             addButton.SetBinding(ButtonBase.CommandProperty, new Binding(nameof(RewasdSettingsViewModel.AddDeviceCommand)));
@@ -73,29 +91,45 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             removeButton.SetBinding(ButtonBase.CommandProperty, new Binding(nameof(RewasdSettingsViewModel.RemoveDeviceCommand)));
             buttonsRow.Children.Add(removeButton);
 
-            panel.Children.Add(buttonsRow);
-            return panel;
+            root.Children.Add(buttonsRow);
+
+            root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsSelectedDeviceHeader")));
+            root.Children.Add(BuildLabeledTextBox(ResourceProvider.GetString("LOCRewasdSettingsDeviceNameLabel"), "SelectedDevice." + nameof(RewasdDeviceRow.DisplayName), 140, 260));
+            root.Children.Add(BuildLabeledTextBox(ResourceProvider.GetString("LOCRewasdSettingsDeviceIdLabel"), "SelectedDevice." + nameof(RewasdDeviceRow.DeviceId), 140, 260));
+            root.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsDeviceIdHint")));
+
+            return root;
         }
 
         /// <summary>
+        /// The selected device's default profile and per-library overrides.
         /// Bound directly to the ViewModel (no DataContext swap to
         /// SelectedDevice) so per-field bindings use "SelectedDevice.X"
         /// paths — that keeps the Command bindings below (which live on the
         /// ViewModel, not on the selected device row) simple, with no
         /// RelativeSource/ancestor lookups needed anywhere in this method.
         /// </summary>
-        private static StackPanel BuildDeviceDetailPanel()
+        private static StackPanel BuildProfilesTab()
         {
-            var panel = new StackPanel();
+            var root = new StackPanel();
 
-            panel.Children.Add(BuildLabeledTextBox(ResourceProvider.GetString("LOCRewasdSettingsDeviceNameLabel"), "SelectedDevice." + nameof(RewasdDeviceRow.DisplayName), 140, 260));
-            panel.Children.Add(BuildLabeledTextBox(ResourceProvider.GetString("LOCRewasdSettingsDeviceIdLabel"), "SelectedDevice." + nameof(RewasdDeviceRow.DeviceId), 140, 260));
-            panel.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsDeviceIdHint")));
+            root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsProfilesHeader")));
+            root.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsProfilesHint")));
 
-            panel.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsDefaultProfileHeader"), new Thickness(0, 16, 0, 8)));
-            panel.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsDefaultProfileHint")));
-            panel.Children.Add(BuildFileRow("SelectedDevice." + nameof(RewasdDeviceRow.DefaultProfilePath), nameof(RewasdSettingsViewModel.BrowseSelectedDeviceProfileCommand)));
-            panel.Children.Add(BuildLabeledTextBox(ResourceProvider.GetString("LOCRewasdSettingsSlotLabel"), "SelectedDevice." + nameof(RewasdDeviceRow.DefaultProfileSlot), 140, 100));
+            var selectedDeviceLabel = new TextBlock { FontStyle = FontStyles.Italic, Margin = new Thickness(0, 0, 0, 16) };
+            selectedDeviceLabel.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            selectedDeviceLabel.SetBinding(TextBlock.TextProperty, new Binding("SelectedDevice." + nameof(RewasdDeviceRow.DisplayName))
+            {
+                TargetNullValue = ResourceProvider.GetString("LOCRewasdSettingsNoDeviceSelected"),
+                FallbackValue = ResourceProvider.GetString("LOCRewasdSettingsNoDeviceSelected"),
+                StringFormat = ResourceProvider.GetString("LOCRewasdSettingsEditingDeviceFormat"),
+            });
+            root.Children.Add(selectedDeviceLabel);
+
+            root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsDefaultProfileHeader")));
+            root.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsDefaultProfileHint")));
+            root.Children.Add(BuildFileRow("SelectedDevice." + nameof(RewasdDeviceRow.DefaultProfilePath), nameof(RewasdSettingsViewModel.BrowseSelectedDeviceProfileCommand)));
+            root.Children.Add(BuildLabeledTextBox(ResourceProvider.GetString("LOCRewasdSettingsSlotLabel"), "SelectedDevice." + nameof(RewasdDeviceRow.DefaultProfileSlot), 140, 100));
 
             var testButton = new Button
             {
@@ -105,15 +139,15 @@ namespace RewasdProfileSwitcher.Playnite.Settings
                 HorizontalAlignment = HorizontalAlignment.Left,
             };
             testButton.SetBinding(ButtonBase.CommandProperty, new Binding(nameof(RewasdSettingsViewModel.TestSelectedDeviceDefaultProfileCommand)));
-            panel.Children.Add(testButton);
+            root.Children.Add(testButton);
 
-            panel.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsLibraryProfilesHeader"), new Thickness(0, 20, 0, 8)));
-            panel.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsLibraryProfilesHint")));
+            root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsLibraryProfilesHeader"), new Thickness(0, 20, 0, 8)));
+            root.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsLibraryProfilesHint")));
 
             var libraryList = new ItemsControl();
             libraryList.SetBinding(ItemsControl.ItemsSourceProperty, new Binding("SelectedDevice." + nameof(RewasdDeviceRow.LibraryProfiles)));
             libraryList.ItemTemplate = BuildLibraryProfileRowTemplate();
-            panel.Children.Add(libraryList);
+            root.Children.Add(libraryList);
 
             var addLibraryButton = new Button
             {
@@ -123,9 +157,9 @@ namespace RewasdProfileSwitcher.Playnite.Settings
                 HorizontalAlignment = HorizontalAlignment.Left,
             };
             addLibraryButton.SetBinding(ButtonBase.CommandProperty, new Binding(nameof(RewasdSettingsViewModel.AddLibraryProfileCommand)));
-            panel.Children.Add(addLibraryButton);
+            root.Children.Add(addLibraryButton);
 
-            return panel;
+            return root;
         }
 
         /// <summary>

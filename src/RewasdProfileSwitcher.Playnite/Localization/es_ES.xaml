@@ -3,6 +3,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
+    <!-- Ajustes: pestañas -->
+    <sys:String x:Key="LOCRewasdSettingsTabGeneral">General</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsTabDevices">Dispositivos</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsTabProfiles">Perfiles</sys:String>
+
     <!-- Ajustes: introducción -->
     <sys:String x:Key="LOCRewasdSettingsHeader">reWASD Profile Switcher</sys:String>
     <sys:String x:Key="LOCRewasdSettingsHint">Cambia automáticamente el perfil o perfiles de mando de reWASD al iniciar y cerrar un juego. Desactivado por defecto — déjalo apagado si juegas con teclado/ratón.</sys:String>
@@ -23,10 +28,17 @@
     <sys:String x:Key="LOCRewasdAddDeviceManually">Añadir a mano (escribir el nombre yo mismo)</sys:String>
 
     <!-- Ajustes: dispositivo seleccionado -->
+    <sys:String x:Key="LOCRewasdSettingsSelectedDeviceHeader">Dispositivo seleccionado</sys:String>
     <sys:String x:Key="LOCRewasdSettingsDeviceNameLabel">Nombre</sys:String>
     <sys:String x:Key="LOCRewasdSettingsDeviceIdLabel">Device ID</sys:String>
     <sys:String x:Key="LOCRewasdSettingsDeviceIdHint">"Copy device ID" en reWASD.</sys:String>
     <sys:String x:Key="LOCRewasdSettingsSlotLabel">Slot</sys:String>
+
+    <!-- Ajustes: pestaña de perfiles -->
+    <sys:String x:Key="LOCRewasdSettingsProfilesHeader">Perfiles</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsProfilesHint">Elige antes un dispositivo en la pestaña Dispositivos — sus perfiles se configuran aquí.</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsNoDeviceSelected">Ningún dispositivo seleccionado — ve primero a la pestaña Dispositivos.</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsEditingDeviceFormat">Editando los perfiles de: {0}</sys:String>
 
     <sys:String x:Key="LOCRewasdSettingsDefaultProfileHeader">Perfil por defecto</sys:String>
     <sys:String x:Key="LOCRewasdSettingsDefaultProfileHint">Se aplica al cerrar cualquier juego, y como perfil de respaldo cuando un juego en curso pertenece a una biblioteca sin perfil propio más abajo.</sys:String>

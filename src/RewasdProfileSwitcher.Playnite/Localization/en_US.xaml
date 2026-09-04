@@ -3,6 +3,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
+    <!-- Settings: tabs -->
+    <sys:String x:Key="LOCRewasdSettingsTabGeneral">General</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsTabDevices">Devices</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsTabProfiles">Profiles</sys:String>
+
     <!-- Settings: intro -->
     <sys:String x:Key="LOCRewasdSettingsHeader">reWASD Profile Switcher</sys:String>
     <sys:String x:Key="LOCRewasdSettingsHint">Automatically switches your reWASD gamepad profile(s) when a game starts and stops. Off by default — leave it off if you play with keyboard/mouse.</sys:String>
@@ -23,10 +28,17 @@
     <sys:String x:Key="LOCRewasdAddDeviceManually">Add manually (type the name in yourself)</sys:String>
 
     <!-- Settings: selected device -->
+    <sys:String x:Key="LOCRewasdSettingsSelectedDeviceHeader">Selected device</sys:String>
     <sys:String x:Key="LOCRewasdSettingsDeviceNameLabel">Name</sys:String>
     <sys:String x:Key="LOCRewasdSettingsDeviceIdLabel">Device ID</sys:String>
     <sys:String x:Key="LOCRewasdSettingsDeviceIdHint">"Copy device ID" in reWASD.</sys:String>
     <sys:String x:Key="LOCRewasdSettingsSlotLabel">Slot</sys:String>
+
+    <!-- Settings: profiles tab -->
+    <sys:String x:Key="LOCRewasdSettingsProfilesHeader">Profiles</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsProfilesHint">Pick a device in the Devices tab first — its profiles are configured here.</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsNoDeviceSelected">No device selected — go to the Devices tab first.</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsEditingDeviceFormat">Editing profiles for: {0}</sys:String>
 
     <sys:String x:Key="LOCRewasdSettingsDefaultProfileHeader">Default profile</sys:String>
     <sys:String x:Key="LOCRewasdSettingsDefaultProfileHint">Applied when any game closes, and as the fallback when a running game's library has no profile of its own below.</sys:String>
