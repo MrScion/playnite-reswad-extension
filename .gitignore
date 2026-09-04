@@ -1,0 +1,12 @@
+bin/
+obj/
+*.user
+*.lnk
+
+# Anything local-only (packaged .pext builds, internal dev notes) lives
+# here instead of the repo root — never committed.
+extras/
+
+# Internal dev notes, not part of the public repo
+.claude/
+CLAUDE.md

@@ -1,0 +1,48 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- Ajustes: introducción -->
+    <sys:String x:Key="LOCRewasdSettingsHeader">reWASD Profile Switcher</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsHint">Cambia automáticamente el perfil o perfiles de mando de reWASD al iniciar y cerrar un juego. Desactivado por defecto — déjalo apagado si juegas con teclado/ratón.</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsEnable">Activar el cambio automático de perfil</sys:String>
+
+    <!-- Ajustes: CLI -->
+    <sys:String x:Key="LOCRewasdSettingsCliHeader">Herramienta de línea de comandos de reWASD</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsBrowse">Examinar...</sys:String>
+    <sys:String x:Key="LOCRewasdCliFilter">reWASDCommandLine.exe|reWASDCommandLine.exe|Archivos ejecutables|*.exe</sys:String>
+
+    <!-- Ajustes: dispositivos -->
+    <sys:String x:Key="LOCRewasdSettingsDevicesHeader">Dispositivos</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsDevicesHint">Una entrada por cada mando que quieras gestionar. Cada dispositivo cambia de forma independiente al iniciar o cerrar cualquier juego.</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsAddDevice">+ Añadir dispositivo</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsRemoveDevice">- Quitar dispositivo</sys:String>
+    <sys:String x:Key="LOCRewasdNewDeviceName">Nuevo dispositivo</sys:String>
+
+    <!-- Ajustes: dispositivo seleccionado -->
+    <sys:String x:Key="LOCRewasdSettingsDeviceNameLabel">Nombre</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsDeviceIdLabel">Device ID</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsDeviceIdHint">"Copy device ID" en reWASD.</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsSlotLabel">Slot</sys:String>
+
+    <sys:String x:Key="LOCRewasdSettingsDefaultProfileHeader">Perfil por defecto</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsDefaultProfileHint">Se aplica al cerrar cualquier juego, y como perfil de respaldo cuando un juego en curso pertenece a una biblioteca sin perfil propio más abajo.</sys:String>
+    <sys:String x:Key="LOCRewasdProfileFilter">Perfil de reWASD|*.rewasd|Todos los archivos|*.*</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsTestDefault">Probar el perfil por defecto ahora</sys:String>
+
+    <sys:String x:Key="LOCRewasdSettingsLibraryProfilesHeader">Perfiles por biblioteca (opcional)</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsLibraryProfilesHint">Sustituye el perfil por defecto para los juegos de una biblioteca de Playnite en concreto — p. ej. un perfil para Steam, otro para otra biblioteca distinta.</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsAddLibraryProfile">+ Añadir perfil de biblioteca...</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsRemove">Quitar</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsTest">Probar</sys:String>
+
+    <sys:String x:Key="LOCRewasdLibraryPickerCaption">Elige una biblioteca</sys:String>
+    <sys:String x:Key="LOCRewasdNoLibrariesFound">No se ha encontrado ninguna biblioteca — añade al menos un juego a tu biblioteca de Playnite primero.</sys:String>
+    <sys:String x:Key="LOCRewasdNoLibraryLabel">Juegos añadidos manualmente (sin biblioteca)</sys:String>
+
+    <!-- Mensajes de resultado de prueba -->
+    <sys:String x:Key="LOCRewasdTestOk">Perfil aplicado correctamente.</sys:String>
+    <sys:String x:Key="LOCRewasdTestErrorPrefix" xml:space="preserve">Error: </sys:String>
+
+</ResourceDictionary>

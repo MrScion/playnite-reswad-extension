@@ -1,0 +1,9 @@
+Id: a56345f8-1e5b-4876-8ecc-2a103fa1117a
+Name: reWASD Profile Switcher
+Author: Mr. Scion
+Version: 0.1.0
+Module: RewasdProfileSwitcher.Playnite.dll
+Type: GenericPlugin
+Links:
+  - Name: reWASD
+    Url: https://www.rewasd.com
