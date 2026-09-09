@@ -13,10 +13,21 @@
     <sys:String x:Key="LOCRewasdSettingsHint">Automatically switches your reWASD gamepad profile(s) when a game starts and stops. Off by default — leave it off if you play with keyboard/mouse.</sys:String>
     <sys:String x:Key="LOCRewasdSettingsEnable">Enable automatic profile switching</sys:String>
 
+    <!-- Settings: install folder -->
+    <sys:String x:Key="LOCRewasdSettingsInstallFolderHeader">reWASD installation folder</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsInstallFolderHint">Defaults to reWASD's standard install location. Change it if you installed reWASD somewhere else — the command-line tool path below is then detected automatically.</sys:String>
+
     <!-- Settings: CLI -->
     <sys:String x:Key="LOCRewasdSettingsCliHeader">reWASD command-line tool</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsCliHint">Auto-detected from the installation folder above. Only browse for it manually if auto-detection didn't find it.</sys:String>
     <sys:String x:Key="LOCRewasdSettingsBrowse">Browse...</sys:String>
     <sys:String x:Key="LOCRewasdCliFilter">reWASDCommandLine.exe|reWASDCommandLine.exe|Executable files|*.exe</sys:String>
+
+    <!-- Settings: profiles folder -->
+    <sys:String x:Key="LOCRewasdSettingsProfilesFolderHeader">reWASD profiles folder</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsProfilesFolderHint">Optional. Point this at the folder containing reWASD's "Profiles" subfolder (each profile has its own folder there, with a Controller subfolder holding its .rewasd file(s)). Once set, the Profiles tab lets you pick from the .rewasd files found there instead of browsing the file system by hand.</sys:String>
+    <sys:String x:Key="LOCRewasdProfileFilePickerCaption">Pick a reWASD profile, or browse manually</sys:String>
+    <sys:String x:Key="LOCRewasdProfileFileBrowseManually">Browse manually (pick a .rewasd file)</sys:String>
 
     <!-- Settings: devices -->
     <sys:String x:Key="LOCRewasdSettingsDevicesHeader">Devices</sys:String>
@@ -46,17 +57,23 @@
     <sys:String x:Key="LOCRewasdSettingsTestDefault">Test default profile now</sys:String>
 
     <sys:String x:Key="LOCRewasdSettingsLibraryProfilesHeader">Per-library profiles (optional)</sys:String>
-    <sys:String x:Key="LOCRewasdSettingsLibraryProfilesHint">Override the default profile for games from one specific Playnite library — e.g. one profile for Steam, another for a different library.</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsLibraryProfilesHint">Override the default profile for games from one specific Playnite library — e.g. one profile for Steam, another for a different library. A library can also be set to Passthrough, which turns remap off instead — releasing reWASD's virtual controller so the real physical device is visible to that library as-is (e.g. so Steam Input sees an actual Steam Controller instead of a virtual Xbox 360 pad).</sys:String>
     <sys:String x:Key="LOCRewasdSettingsAddLibraryProfile">+ Add library profile...</sys:String>
     <sys:String x:Key="LOCRewasdSettingsRemove">Remove</sys:String>
     <sys:String x:Key="LOCRewasdSettingsTest">Test</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsLibraryPassthroughLabel">Passthrough</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsLibraryPassthroughHint">Real device shown as-is — no profile.</sys:String>
 
     <sys:String x:Key="LOCRewasdLibraryPickerCaption">Pick a library</sys:String>
+    <sys:String x:Key="LOCRewasdLibraryModePickerCaption">How should this library be handled?</sys:String>
+    <sys:String x:Key="LOCRewasdLibraryModeProfile">Use a profile file</sys:String>
+    <sys:String x:Key="LOCRewasdLibraryModePassthrough">Passthrough — turn remap off, show the real device as-is</sys:String>
     <sys:String x:Key="LOCRewasdNoLibrariesFound">No libraries found — add at least one game to your Playnite library first.</sys:String>
     <sys:String x:Key="LOCRewasdNoLibraryLabel">Manually added games (no library)</sys:String>
 
     <!-- Test result messages -->
     <sys:String x:Key="LOCRewasdTestOk">Profile applied successfully.</sys:String>
+    <sys:String x:Key="LOCRewasdTestPassthroughOk">Remap turned off — the real device should now be visible as-is.</sys:String>
     <sys:String x:Key="LOCRewasdTestErrorPrefix" xml:space="preserve">Error: </sys:String>
 
 </ResourceDictionary>

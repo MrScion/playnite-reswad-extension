@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -61,8 +62,17 @@ namespace RewasdProfileSwitcher.Playnite.Settings
                 new Binding(nameof(RewasdSettingsViewModel.IntegrationEnabled)) { Mode = BindingMode.TwoWay });
             root.Children.Add(enableCheck);
 
-            root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsCliHeader")));
+            root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsInstallFolderHeader")));
+            root.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsInstallFolderHint")));
+            root.Children.Add(BuildFileRow(nameof(RewasdSettingsViewModel.InstallFolder), nameof(RewasdSettingsViewModel.BrowseInstallFolderCommand)));
+
+            root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsCliHeader"), new Thickness(0, 12, 0, 8)));
+            root.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsCliHint")));
             root.Children.Add(BuildFileRow(nameof(RewasdSettingsViewModel.CliPath), nameof(RewasdSettingsViewModel.BrowseCliCommand)));
+
+            root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsProfilesFolderHeader"), new Thickness(0, 12, 0, 8)));
+            root.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsProfilesFolderHint")));
+            root.Children.Add(BuildFileRow(nameof(RewasdSettingsViewModel.ProfilesFolder), nameof(RewasdSettingsViewModel.BrowseProfilesFolderCommand)));
 
             return root;
         }
@@ -129,7 +139,7 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             root.Children.Add(Header(ResourceProvider.GetString("LOCRewasdSettingsDefaultProfileHeader")));
             root.Children.Add(Hint(ResourceProvider.GetString("LOCRewasdSettingsDefaultProfileHint")));
             root.Children.Add(BuildFileRow("SelectedDevice." + nameof(RewasdDeviceRow.DefaultProfilePath), nameof(RewasdSettingsViewModel.BrowseSelectedDeviceProfileCommand)));
-            root.Children.Add(BuildLabeledTextBox(ResourceProvider.GetString("LOCRewasdSettingsSlotLabel"), "SelectedDevice." + nameof(RewasdDeviceRow.DefaultProfileSlot), 140, 100));
+            root.Children.Add(BuildLabeledSlotComboBox(ResourceProvider.GetString("LOCRewasdSettingsSlotLabel"), "SelectedDevice." + nameof(RewasdDeviceRow.DefaultProfileSlot), 140, 100));
 
             var testButton = new Button
             {
@@ -193,11 +203,23 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             testButton.AddHandler(ButtonBase.ClickEvent, (RoutedEventHandler)OnTestLibraryProfileClick);
             row.AppendChild(testButton);
 
-            var slotBox = new FrameworkElementFactory(typeof(TextBox));
-            slotBox.SetValue(FrameworkElement.WidthProperty, 80.0);
+            var passthroughCheck = new FrameworkElementFactory(typeof(CheckBox));
+            passthroughCheck.SetValue(ContentControl.ContentProperty, ResourceProvider.GetString("LOCRewasdSettingsLibraryPassthroughLabel"));
+            passthroughCheck.SetValue(FrameworkElement.MarginProperty, new Thickness(10, 0, 0, 0));
+            passthroughCheck.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+            passthroughCheck.SetValue(DockPanel.DockProperty, Dock.Right);
+            passthroughCheck.SetBinding(ToggleButton.IsCheckedProperty, new Binding(nameof(RewasdLibraryProfileRow.Passthrough)) { Mode = BindingMode.TwoWay });
+            row.AppendChild(passthroughCheck);
+
+            var slotBox = new FrameworkElementFactory(typeof(ComboBox));
+            slotBox.SetValue(FrameworkElement.WidthProperty, 100.0);
             slotBox.SetValue(FrameworkElement.MarginProperty, new Thickness(6, 0, 0, 0));
             slotBox.SetValue(DockPanel.DockProperty, Dock.Right);
-            slotBox.SetBinding(TextBox.TextProperty, new Binding(nameof(RewasdLibraryProfileRow.ProfileSlot)) { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+            slotBox.SetValue(ItemsControl.ItemsSourceProperty, RewasdSlotOption.All);
+            slotBox.SetValue(ItemsControl.DisplayMemberPathProperty, nameof(RewasdSlotOption.Label));
+            slotBox.SetValue(Selector.SelectedValuePathProperty, nameof(RewasdSlotOption.Value));
+            slotBox.SetBinding(Selector.SelectedValueProperty, new Binding(nameof(RewasdLibraryProfileRow.ProfileSlot)) { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+            slotBox.SetValue(FrameworkElement.StyleProperty, CollapsedWhenPassthroughStyle(typeof(ComboBox)));
             row.AppendChild(slotBox);
 
             var nameLabel = new FrameworkElementFactory(typeof(TextBlock));
@@ -207,11 +229,23 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             nameLabel.SetBinding(TextBlock.TextProperty, new Binding(nameof(RewasdLibraryProfileRow.LibraryDisplayName)));
             row.AppendChild(nameLabel);
 
+            // Profile path — only meaningful (and only shown) when this row isn't Passthrough.
             var pathBox = new FrameworkElementFactory(typeof(TextBox));
             pathBox.SetValue(TextBox.IsReadOnlyProperty, true);
             pathBox.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
             pathBox.SetBinding(TextBox.TextProperty, new Binding(nameof(RewasdLibraryProfileRow.ProfilePath)));
+            pathBox.SetValue(FrameworkElement.StyleProperty, CollapsedWhenPassthroughStyle(typeof(TextBox)));
             row.AppendChild(pathBox);
+
+            // Shown instead of the path box only when this row is Passthrough.
+            var passthroughHint = new FrameworkElementFactory(typeof(TextBlock));
+            passthroughHint.SetValue(TextBlock.TextProperty, ResourceProvider.GetString("LOCRewasdSettingsLibraryPassthroughHint"));
+            passthroughHint.SetValue(TextBlock.FontStyleProperty, FontStyles.Italic);
+            passthroughHint.SetValue(TextBlock.OpacityProperty, 0.7);
+            passthroughHint.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+            passthroughHint.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
+            passthroughHint.SetValue(FrameworkElement.StyleProperty, VisibleOnlyWhenPassthroughStyle());
+            row.AppendChild(passthroughHint);
 
             return new DataTemplate(typeof(RewasdLibraryProfileRow)) { VisualTree = row };
         }
@@ -242,6 +276,44 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             }
         }
 
+        /// <summary>
+        /// A Style, for the given control type, that collapses the element
+        /// when the row's Passthrough is true. Based on Playnite's current
+        /// theme's implicit style for that type (looked up by the bare type
+        /// as the resource key, same as WPF's own implicit-style lookup) —
+        /// a plain <c>new Style(controlType)</c> with no BasedOn would
+        /// override that implicit style entirely and fall back to raw
+        /// default WPF chrome (wrong colors/borders), losing the rest of
+        /// the settings dialog's look.
+        /// </summary>
+        private static Style CollapsedWhenPassthroughStyle(Type controlType)
+        {
+            var style = new Style(controlType, Application.Current.TryFindResource(controlType) as Style);
+            var trigger = new DataTrigger
+            {
+                Binding = new Binding(nameof(RewasdLibraryProfileRow.Passthrough)),
+                Value = true,
+            };
+            trigger.Setters.Add(new Setter(UIElement.VisibilityProperty, Visibility.Collapsed));
+            style.Triggers.Add(trigger);
+            return style;
+        }
+
+        /// <summary>The inverse of <see cref="CollapsedWhenPassthroughStyle"/> — visible only when the row's Passthrough is true. Same implicit-style basis, see there for why.</summary>
+        private static Style VisibleOnlyWhenPassthroughStyle()
+        {
+            var style = new Style(typeof(TextBlock), Application.Current.TryFindResource(typeof(TextBlock)) as Style);
+            style.Setters.Add(new Setter(UIElement.VisibilityProperty, Visibility.Collapsed));
+            var trigger = new DataTrigger
+            {
+                Binding = new Binding(nameof(RewasdLibraryProfileRow.Passthrough)),
+                Value = true,
+            };
+            trigger.Setters.Add(new Setter(UIElement.VisibilityProperty, Visibility.Visible));
+            style.Triggers.Add(trigger);
+            return style;
+        }
+
         private static T FindAncestorDataContext<T>(DependencyObject start) where T : class
         {
             var current = start;
@@ -256,7 +328,7 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             return null;
         }
 
-        /// <summary>Read-only path textbox + "Browse..." button, bound to a string property (by path) and a browse RelayCommand.</summary>
+        /// <summary>Read-only path textbox + "Browse..." button, bound to a string property (by path) and a browse RelayCommand — works for either a file or a folder picker, depending on what the bound command opens.</summary>
         private static DockPanel BuildFileRow(string propertyPath, string browseCommandPropertyName)
         {
             var row = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
@@ -269,6 +341,35 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             var box = new TextBox { IsReadOnly = true, Margin = new Thickness(0, 0, 8, 0) };
             box.SetBinding(TextBox.TextProperty, new Binding(propertyPath));
             row.Children.Add(box);
+
+            return row;
+        }
+
+        /// <summary>
+        /// Label + Slot dropdown row (slot1..slot4, see <see cref="RewasdSlotOption"/>),
+        /// two-way bound to a string property (by path) holding reWASD's
+        /// raw slot value.
+        /// </summary>
+        private static DockPanel BuildLabeledSlotComboBox(string labelText, string propertyPath, double labelWidth, double boxWidth)
+        {
+            var row = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
+
+            var label = Hint(labelText);
+            label.Margin = new Thickness(0, 0, 8, 0);
+            label.Width = labelWidth;
+            DockPanel.SetDock(label, Dock.Left);
+            row.Children.Add(label);
+
+            var combo = new ComboBox
+            {
+                Width = boxWidth,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                ItemsSource = RewasdSlotOption.All,
+                DisplayMemberPath = nameof(RewasdSlotOption.Label),
+                SelectedValuePath = nameof(RewasdSlotOption.Value),
+            };
+            combo.SetBinding(Selector.SelectedValueProperty, new Binding(propertyPath) { Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+            row.Children.Add(combo);
 
             return row;
         }

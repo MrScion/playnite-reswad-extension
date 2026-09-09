@@ -4,16 +4,27 @@ using System.Linq;
 
 namespace RewasdProfileSwitcher.Core.Rewasd
 {
-    /// <summary>Which (path, slot) to apply for a device, resolved from its per-library overrides and default.</summary>
+    /// <summary>
+    /// Which action to take for a device when a game starts: apply a
+    /// profile, or (when the matching library is configured as passthrough)
+    /// turn remap off and leave the real physical device untouched.
+    /// </summary>
     public struct RewasdResolvedProfile
     {
+        public bool IsPassthrough;
         public string ProfilePath;
         public string ProfileSlot;
 
         public RewasdResolvedProfile(string profilePath, string profileSlot)
         {
+            IsPassthrough = false;
             ProfilePath = profilePath;
             ProfileSlot = profileSlot;
+        }
+
+        public static RewasdResolvedProfile Passthrough()
+        {
+            return new RewasdResolvedProfile { IsPassthrough = true, ProfilePath = "", ProfileSlot = "" };
         }
     }
 
@@ -32,12 +43,16 @@ namespace RewasdProfileSwitcher.Core.Rewasd
         {
             var match = libraryProfiles?.FirstOrDefault(p =>
                 p.LibraryPluginId == gamePluginId &&
-                !string.IsNullOrEmpty(p.ProfilePath) &&
-                !string.IsNullOrEmpty(p.ProfileSlot));
+                (p.Passthrough || (!string.IsNullOrEmpty(p.ProfilePath) && !string.IsNullOrEmpty(p.ProfileSlot))));
 
-            return match != null
-                ? new RewasdResolvedProfile(match.ProfilePath, match.ProfileSlot)
-                : new RewasdResolvedProfile(defaultProfilePath, defaultProfileSlot);
+            if (match == null)
+            {
+                return new RewasdResolvedProfile(defaultProfilePath, defaultProfileSlot);
+            }
+
+            return match.Passthrough
+                ? RewasdResolvedProfile.Passthrough()
+                : new RewasdResolvedProfile(match.ProfilePath, match.ProfileSlot);
         }
     }
 }

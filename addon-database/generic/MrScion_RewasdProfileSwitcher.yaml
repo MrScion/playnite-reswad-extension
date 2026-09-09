@@ -1,0 +1,32 @@
+AddonId: a56345f8-1e5b-4876-8ecc-2a103fa1117a
+Type: Generic
+Name: reWASD Profile Switcher
+Author: Mr. Scion
+ShortDescription: Automatically switches your reWASD gamepad profile(s) when a game starts and stops, with per-library overrides.
+InstallerManifestUrl: https://raw.githubusercontent.com/MrScion/playnite-reswad-extension/master/addon-database/installer.yaml
+SourceUrl: https://github.com/MrScion/playnite-reswad-extension
+Description: >
+  Switches the active reWASD gamepad profile(s) automatically when any game
+  starts or stops, by driving reWASDCommandLine.exe. Supports multiple
+  devices at once, each with its own default profile (applied on game close,
+  and as the fallback when a running game's library has no override) plus
+  optional per-library overrides - e.g. one profile for Steam, another for a
+  different library, applied based on which library the started game
+  belongs to.
+
+
+  A library can also be set to Passthrough instead of a profile file, which
+  turns reWASD's remap off for that library - releasing its virtual
+  controller so the real physical device is visible as-is (useful for e.g.
+  Steam Input to see an actual Steam Controller instead of reWASD's virtual
+  Xbox 360 pad).
+
+
+  Settings can point at reWASD's install folder (auto-detecting
+  reWASDCommandLine.exe) and at reWASD's profiles folder (offering a picker
+  of the .rewasd files found there instead of browsing the file system by
+  hand). Off by default - irrelevant if you play with keyboard/mouse.
+Tags: ['reWASD', 'Gamepad', 'Controller']
+Links:
+  GitHub: https://github.com/MrScion/playnite-reswad-extension
+  reWASD: https://www.rewasd.com

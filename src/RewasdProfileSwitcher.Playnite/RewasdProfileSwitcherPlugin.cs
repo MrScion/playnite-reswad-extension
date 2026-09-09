@@ -53,7 +53,15 @@ namespace RewasdProfileSwitcher.Playnite
 
                 try
                 {
-                    RewasdCliController.ApplyProfile(settings.CliPath, device.DeviceId, profile.ProfilePath, profile.ProfileSlot);
+                    if (profile.IsPassthrough)
+                    {
+                        RewasdCliController.SetRemapState(settings.CliPath, device.DeviceId, false);
+                    }
+                    else
+                    {
+                        RewasdCliController.SetRemapState(settings.CliPath, device.DeviceId, true);
+                        RewasdCliController.ApplyProfile(settings.CliPath, device.DeviceId, profile.ProfilePath, profile.ProfileSlot);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -74,6 +82,9 @@ namespace RewasdProfileSwitcher.Playnite
             {
                 try
                 {
+                    // Always re-enable remap first — the game that just closed may have
+                    // been a passthrough library, which left remap off for this device.
+                    RewasdCliController.SetRemapState(settings.CliPath, device.DeviceId, true);
                     RewasdCliController.ApplyProfile(settings.CliPath, device.DeviceId, device.DefaultProfilePath, device.DefaultProfileSlot);
                 }
                 catch (Exception ex)
@@ -93,12 +104,35 @@ namespace RewasdProfileSwitcher.Playnite
         {
             try
             {
+                RewasdCliController.SetRemapState(cliPath, deviceId, true);
                 RewasdCliController.ApplyProfile(cliPath, deviceId, profilePath, profileSlot);
                 PlayniteApi.Dialogs.ShowMessage(ResourceProvider.GetString("LOCRewasdTestOk"), "reWASD Profile Switcher");
             }
             catch (Exception ex)
             {
                 Logger.Warn(ex, "reWASD profile test failed.");
+                PlayniteApi.Dialogs.ShowErrorMessage(
+                    ResourceProvider.GetString("LOCRewasdTestErrorPrefix") + ex.Message, "reWASD Profile Switcher");
+            }
+        }
+
+        /// <summary>
+        /// Runs a one-off "turn remap off" from the settings dialog's Test
+        /// button on a passthrough library row — releases the virtual
+        /// controller so the real physical device becomes visible to
+        /// Windows/Steam as-is, same effect this device gets on game start
+        /// for a library configured as passthrough.
+        /// </summary>
+        internal void TestPassthrough(string cliPath, string deviceId)
+        {
+            try
+            {
+                RewasdCliController.SetRemapState(cliPath, deviceId, false);
+                PlayniteApi.Dialogs.ShowMessage(ResourceProvider.GetString("LOCRewasdTestPassthroughOk"), "reWASD Profile Switcher");
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn(ex, "reWASD passthrough test failed.");
                 PlayniteApi.Dialogs.ShowErrorMessage(
                     ResourceProvider.GetString("LOCRewasdTestErrorPrefix") + ex.Message, "reWASD Profile Switcher");
             }

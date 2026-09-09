@@ -4,9 +4,12 @@ using System.Diagnostics;
 namespace RewasdProfileSwitcher.Core.Rewasd
 {
     /// <summary>
-    /// Switches the active reWASD gamepad profile by shelling out to
-    /// reWASDCommandLine.exe ("apply --id &lt;deviceId&gt; --path &lt;configPath&gt;
-    /// --slot &lt;slot&gt;").
+    /// Drives reWASDCommandLine.exe: applying a profile to a slot
+    /// ("apply --id &lt;deviceId&gt; --path &lt;configPath&gt; --slot &lt;slot&gt;"), and
+    /// toggling remap on/off for a device ("remap --id &lt;deviceId&gt;
+    /// --state on|off") — remap off releases the virtual controller and
+    /// restores the real physical device to Windows (see
+    /// <see cref="SetRemapState"/>).
     /// </summary>
     public static class RewasdCliController
     {
@@ -27,10 +30,47 @@ namespace RewasdProfileSwitcher.Core.Rewasd
                 return;
             }
 
+            RunCli(cliPath, BuildArguments(deviceId, configPath, slot));
+        }
+
+        /// <summary>
+        /// Runs reWASDCommandLine.exe to turn remap on or off for
+        /// <paramref name="deviceId"/>. With remap off, reWASD stops hiding
+        /// the physical device and removes the virtual controller — the raw
+        /// device becomes visible to Windows/other apps (e.g. Steam Input)
+        /// exactly as it identifies itself, with none of reWASD's mapping
+        /// applied. A no-op if any required parameter is blank; throws on a
+        /// missing executable, a timeout, or a non-zero exit code — callers
+        /// catch and log, same as <see cref="ApplyProfile"/>.
+        /// </summary>
+        public static void SetRemapState(string cliPath, string deviceId, bool enabled)
+        {
+            if (string.IsNullOrEmpty(cliPath) || string.IsNullOrEmpty(deviceId))
+            {
+                return;
+            }
+
+            RunCli(cliPath, BuildRemapArguments(deviceId, enabled));
+        }
+
+        /// <summary>Arguments for the "apply" subcommand — split out so the format can be tested without launching a process.</summary>
+        public static string BuildArguments(string deviceId, string configPath, string slot)
+        {
+            return $"apply --id \"{deviceId}\" --path \"{configPath}\" --slot \"{slot}\"";
+        }
+
+        /// <summary>Arguments for the "remap" subcommand — split out so the format can be tested without launching a process.</summary>
+        public static string BuildRemapArguments(string deviceId, bool enabled)
+        {
+            return $"remap --id \"{deviceId}\" --state {(enabled ? "on" : "off")}";
+        }
+
+        private static void RunCli(string cliPath, string arguments)
+        {
             var startInfo = new ProcessStartInfo
             {
                 FileName = cliPath,
-                Arguments = BuildArguments(deviceId, configPath, slot),
+                Arguments = arguments,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardError = true,
@@ -56,12 +96,6 @@ namespace RewasdProfileSwitcher.Core.Rewasd
                         : $"reWASDCommandLine.exe returned exit code {process.ExitCode}: {stderr.Trim()}");
                 }
             }
-        }
-
-        /// <summary>Arguments for the "apply" subcommand — split out so the format can be tested without launching a process.</summary>
-        public static string BuildArguments(string deviceId, string configPath, string slot)
-        {
-            return $"apply --id \"{deviceId}\" --path \"{configPath}\" --slot \"{slot}\"";
         }
     }
 }

@@ -74,5 +74,34 @@ namespace RewasdProfileSwitcher.Core.Tests.Rewasd
             Assert.Equal(@"C:\trle.rewasd", result.ProfilePath);
             Assert.Equal("slot3", result.ProfileSlot);
         }
+
+        [Fact]
+        public void ResolveStartProfile_ReturnsPassthroughWhenLibraryIsConfiguredAsPassthrough()
+        {
+            var profiles = new List<RewasdLibraryProfile>
+            {
+                new RewasdLibraryProfile { LibraryPluginId = SteamLibraryId, Passthrough = true },
+            };
+
+            var result = RewasdProfileResolver.ResolveStartProfile(
+                SteamLibraryId, @"C:\default.rewasd", "slot1", profiles);
+
+            Assert.True(result.IsPassthrough);
+        }
+
+        [Fact]
+        public void ResolveStartProfile_NonMatchingLibraryIsNotPassthrough()
+        {
+            var profiles = new List<RewasdLibraryProfile>
+            {
+                new RewasdLibraryProfile { LibraryPluginId = SteamLibraryId, Passthrough = true },
+            };
+
+            var result = RewasdProfileResolver.ResolveStartProfile(
+                UnmappedLibraryId, @"C:\default.rewasd", "slot1", profiles);
+
+            Assert.False(result.IsPassthrough);
+            Assert.Equal(@"C:\default.rewasd", result.ProfilePath);
+        }
     }
 }

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using Playnite.SDK;
 using RewasdProfileSwitcher.Core.Gamepads;
 using RewasdProfileSwitcher.Core.Rewasd;
 using RewasdProfileSwitcher.Playnite.Gamepads;
+using RewasdProfileSwitcher.Playnite.Rewasd;
 
 namespace RewasdProfileSwitcher.Playnite.Settings
 {
@@ -14,6 +16,7 @@ namespace RewasdProfileSwitcher.Playnite.Settings
     {
         private string _profilePath;
         private string _profileSlot;
+        private bool _passthrough;
 
         public Guid LibraryPluginId { get; }
         public string LibraryDisplayName { get; }
@@ -30,12 +33,20 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             set => SetValue(ref _profileSlot, value);
         }
 
-        public RewasdLibraryProfileRow(Guid libraryPluginId, string libraryDisplayName, string profilePath, string profileSlot)
+        /// <summary>See <see cref="RewasdLibraryProfile.Passthrough"/>.</summary>
+        public bool Passthrough
+        {
+            get => _passthrough;
+            set => SetValue(ref _passthrough, value);
+        }
+
+        public RewasdLibraryProfileRow(Guid libraryPluginId, string libraryDisplayName, string profilePath, string profileSlot, bool passthrough = false)
         {
             LibraryPluginId = libraryPluginId;
             LibraryDisplayName = libraryDisplayName;
             _profilePath = profilePath;
             _profileSlot = profileSlot;
+            _passthrough = passthrough;
         }
 
         public RewasdLibraryProfile ToModel()
@@ -46,6 +57,7 @@ namespace RewasdProfileSwitcher.Playnite.Settings
                 LibraryDisplayName = LibraryDisplayName,
                 ProfilePath = ProfilePath ?? "",
                 ProfileSlot = ProfileSlot ?? "",
+                Passthrough = Passthrough,
             };
         }
     }
@@ -100,7 +112,7 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             var row = new RewasdDeviceRow(model.Id, model.DisplayName, model.DeviceId, model.DefaultProfilePath, model.DefaultProfileSlot);
             foreach (var profile in model.LibraryProfiles)
             {
-                row.LibraryProfiles.Add(new RewasdLibraryProfileRow(profile.LibraryPluginId, profile.LibraryDisplayName, profile.ProfilePath, profile.ProfileSlot));
+                row.LibraryProfiles.Add(new RewasdLibraryProfileRow(profile.LibraryPluginId, profile.LibraryDisplayName, profile.ProfilePath, profile.ProfileSlot, profile.Passthrough));
             }
             return row;
         }
@@ -125,11 +137,15 @@ namespace RewasdProfileSwitcher.Playnite.Settings
         private readonly RewasdSettings _settings;
 
         private bool _beforeIntegrationEnabled;
+        private string _beforeInstallFolder;
         private string _beforeCliPath;
+        private string _beforeProfilesFolder;
         private List<RewasdDeviceSettings> _beforeDevices;
 
         private bool _integrationEnabled;
+        private string _installFolder;
         private string _cliPath;
+        private string _profilesFolder;
         private RewasdDeviceRow _selectedDevice;
 
         public bool IntegrationEnabled
@@ -138,10 +154,28 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             set => SetValue(ref _integrationEnabled, value);
         }
 
+        /// <summary>reWASD's install folder — only used to auto-detect <see cref="CliPath"/> below (see <see cref="TryAutoDetectCliPath"/>), never read by the CLI controller itself.</summary>
+        public string InstallFolder
+        {
+            get => _installFolder;
+            set => SetValue(ref _installFolder, value);
+        }
+
         public string CliPath
         {
             get => _cliPath;
             set => SetValue(ref _cliPath, value);
+        }
+
+        /// <summary>
+        /// Folder holding reWASD's <c>Profiles\&lt;name&gt;\Controller\*.rewasd</c>
+        /// layout — used only to offer a picker of found .rewasd files (see
+        /// <see cref="PickProfileFile"/>) instead of a plain file browser.
+        /// </summary>
+        public string ProfilesFolder
+        {
+            get => _profilesFolder;
+            set => SetValue(ref _profilesFolder, value);
         }
 
         public ObservableCollection<RewasdDeviceRow> Devices { get; } = new ObservableCollection<RewasdDeviceRow>();
@@ -152,7 +186,9 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             set => SetValue(ref _selectedDevice, value);
         }
 
+        public RelayCommand BrowseInstallFolderCommand { get; }
         public RelayCommand BrowseCliCommand { get; }
+        public RelayCommand BrowseProfilesFolderCommand { get; }
         public RelayCommand AddDeviceCommand { get; }
         public RelayCommand RemoveDeviceCommand { get; }
         public RelayCommand BrowseSelectedDeviceProfileCommand { get; }
@@ -165,19 +201,74 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             _settings = plugin.LoadPluginSettings<RewasdSettings>() ?? new RewasdSettings();
 
             IntegrationEnabled = _settings.IntegrationEnabled;
+            InstallFolder = _settings.InstallFolder;
             CliPath = _settings.CliPath;
+            ProfilesFolder = _settings.ProfilesFolder;
             foreach (var device in _settings.Devices)
             {
                 Devices.Add(RewasdDeviceRow.FromModel(device));
             }
             SelectedDevice = Devices.FirstOrDefault();
 
+            // Only on first load, and only if there's no CliPath yet (e.g. a
+            // brand-new install, or an existing settings file saved before
+            // InstallFolder existed) — an explicit Browse afterwards (see
+            // BrowseInstallFolder) always overwrites, since that's a
+            // deliberate user action.
+            if (string.IsNullOrEmpty(CliPath))
+            {
+                TryAutoDetectCliPath();
+            }
+
+            BrowseInstallFolderCommand = new RelayCommand(BrowseInstallFolder);
             BrowseCliCommand = new RelayCommand(BrowseCli);
+            BrowseProfilesFolderCommand = new RelayCommand(BrowseProfilesFolder);
             AddDeviceCommand = new RelayCommand(AddDevice);
             RemoveDeviceCommand = new RelayCommand(RemoveDevice, () => SelectedDevice != null);
             BrowseSelectedDeviceProfileCommand = new RelayCommand(BrowseSelectedDeviceProfile, () => SelectedDevice != null);
             TestSelectedDeviceDefaultProfileCommand = new RelayCommand(TestSelectedDeviceDefaultProfile, () => SelectedDevice != null);
             AddLibraryProfileCommand = new RelayCommand(AddLibraryProfile, () => SelectedDevice != null);
+        }
+
+        private void BrowseInstallFolder()
+        {
+            var folder = _plugin.PlayniteApi.Dialogs.SelectFolder(InstallFolder);
+            if (!string.IsNullOrEmpty(folder))
+            {
+                InstallFolder = folder;
+                TryAutoDetectCliPath();
+            }
+        }
+
+        /// <summary>
+        /// Looks for reWASDCommandLine.exe under <see cref="InstallFolder"/>
+        /// (reWASD's own CLI has no "where am I installed" command to ask
+        /// instead — see CLAUDE.md's "Gamepad auto-detect" section for the
+        /// same limitation on Device ID). Searches subfolders too since the
+        /// exact layout isn't guaranteed, just "usually" the folder root.
+        /// Silently does nothing if the folder doesn't exist or nothing is
+        /// found — never blocks picking a folder or clears an existing
+        /// CliPath.
+        /// </summary>
+        private void TryAutoDetectCliPath()
+        {
+            if (string.IsNullOrEmpty(InstallFolder) || !Directory.Exists(InstallFolder))
+            {
+                return;
+            }
+
+            try
+            {
+                var found = Directory.GetFiles(InstallFolder, "reWASDCommandLine.exe", SearchOption.AllDirectories).FirstOrDefault();
+                if (!string.IsNullOrEmpty(found))
+                {
+                    CliPath = found;
+                }
+            }
+            catch
+            {
+                // Best-effort only — e.g. access denied on a subfolder. Leave CliPath as-is.
+            }
         }
 
         private void BrowseCli()
@@ -187,6 +278,61 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             {
                 CliPath = file;
             }
+        }
+
+        private void BrowseProfilesFolder()
+        {
+            var folder = _plugin.PlayniteApi.Dialogs.SelectFolder(ProfilesFolder);
+            if (!string.IsNullOrEmpty(folder))
+            {
+                ProfilesFolder = folder;
+            }
+        }
+
+        /// <summary>
+        /// Offers a picker of .rewasd files found under
+        /// <see cref="ProfilesFolder"/> (see <see cref="RewasdProfileFileScanner"/>
+        /// for the on-disk layout this expects), with a "browse manually"
+        /// fallback entry — same picker-plus-manual-fallback shape as
+        /// <see cref="AddDevice"/>'s gamepad picker. Falls straight back to
+        /// a plain file browser (today's behavior) when no profiles folder
+        /// is configured, or nothing was found in it. Returns null if the
+        /// user cancelled.
+        /// </summary>
+        private string PickProfileFile()
+        {
+            List<RewasdProfileFile> found;
+            try
+            {
+                found = RewasdProfileFileScanner.Scan(ProfilesFolder);
+            }
+            catch
+            {
+                found = new List<RewasdProfileFile>();
+            }
+
+            if (found.Count == 0)
+            {
+                return _plugin.PlayniteApi.Dialogs.SelectFile(ResourceProvider.GetString("LOCRewasdProfileFilter"));
+            }
+
+            var items = found
+                .Select(f => (GenericItemOption)new ProfileFilePickerOption(f.FilePath, f.DisplayName))
+                .ToList();
+            items.Add(new ProfileFilePickerOption(null, ResourceProvider.GetString("LOCRewasdProfileFileBrowseManually")));
+
+            var chosen = _plugin.PlayniteApi.Dialogs.ChooseItemWithSearch(
+                items,
+                query => items.Where(i => i.Name.IndexOf(query ?? "", StringComparison.OrdinalIgnoreCase) >= 0).ToList(),
+                "",
+                ResourceProvider.GetString("LOCRewasdProfileFilePickerCaption"));
+
+            if (!(chosen is ProfileFilePickerOption picked))
+            {
+                return null;
+            }
+
+            return picked.FilePath ?? _plugin.PlayniteApi.Dialogs.SelectFile(ResourceProvider.GetString("LOCRewasdProfileFilter"));
         }
 
         /// <summary>
@@ -258,7 +404,7 @@ namespace RewasdProfileSwitcher.Playnite.Settings
                 return;
             }
 
-            var file = _plugin.PlayniteApi.Dialogs.SelectFile(ResourceProvider.GetString("LOCRewasdProfileFilter"));
+            var file = PickProfileFile();
             if (!string.IsNullOrEmpty(file))
             {
                 SelectedDevice.DefaultProfilePath = file;
@@ -277,8 +423,11 @@ namespace RewasdProfileSwitcher.Playnite.Settings
 
         /// <summary>
         /// Picks a library (from ones already represented in the game
-        /// database) and a profile file, then adds or updates that library's
-        /// override for the selected device.
+        /// database), then whether it should get a profile file or
+        /// passthrough (remap off — real device visible as-is, e.g. for
+        /// Steam Input to see an actual Steam Controller instead of
+        /// reWASD's virtual Xbox 360 pad), then adds or updates that
+        /// library's override for the selected device.
         /// </summary>
         private void AddLibraryProfile()
         {
@@ -294,35 +443,65 @@ namespace RewasdProfileSwitcher.Playnite.Settings
                 return;
             }
 
-            var initialItems = libraries
+            var libraryItems = libraries
                 .Select(l => (GenericItemOption)new LibraryPickerOption(l.PluginId, l.DisplayName, $"{l.DisplayName} ({l.GameCount})"))
                 .ToList();
 
-            var chosen = _plugin.PlayniteApi.Dialogs.ChooseItemWithSearch(
-                initialItems,
-                query => initialItems.Where(i => i.Name.IndexOf(query ?? "", StringComparison.OrdinalIgnoreCase) >= 0).ToList(),
+            var chosenLibrary = _plugin.PlayniteApi.Dialogs.ChooseItemWithSearch(
+                libraryItems,
+                query => libraryItems.Where(i => i.Name.IndexOf(query ?? "", StringComparison.OrdinalIgnoreCase) >= 0).ToList(),
                 "",
                 ResourceProvider.GetString("LOCRewasdLibraryPickerCaption"));
 
-            if (!(chosen is LibraryPickerOption picked))
+            if (!(chosenLibrary is LibraryPickerOption picked))
             {
                 return;
             }
 
-            var file = _plugin.PlayniteApi.Dialogs.SelectFile(ResourceProvider.GetString("LOCRewasdProfileFilter"));
+            var modeItems = new List<GenericItemOption>
+            {
+                new LibraryModeOption(false, ResourceProvider.GetString("LOCRewasdLibraryModeProfile")),
+                new LibraryModeOption(true, ResourceProvider.GetString("LOCRewasdLibraryModePassthrough")),
+            };
+
+            var chosenMode = _plugin.PlayniteApi.Dialogs.ChooseItemWithSearch(
+                modeItems,
+                query => modeItems,
+                "",
+                ResourceProvider.GetString("LOCRewasdLibraryModePickerCaption"));
+
+            if (!(chosenMode is LibraryModeOption mode))
+            {
+                return;
+            }
+
+            if (mode.Passthrough)
+            {
+                UpsertLibraryProfile(picked, "", "", true);
+                return;
+            }
+
+            var file = PickProfileFile();
             if (string.IsNullOrEmpty(file))
             {
                 return;
             }
 
+            UpsertLibraryProfile(picked, file, "slot1", false);
+        }
+
+        private void UpsertLibraryProfile(LibraryPickerOption picked, string profilePath, string profileSlot, bool passthrough)
+        {
             var existing = SelectedDevice.LibraryProfiles.FirstOrDefault(p => p.LibraryPluginId == picked.LibraryPluginId);
             if (existing != null)
             {
-                existing.ProfilePath = file;
+                existing.ProfilePath = profilePath;
+                existing.ProfileSlot = profileSlot;
+                existing.Passthrough = passthrough;
             }
             else
             {
-                SelectedDevice.LibraryProfiles.Add(new RewasdLibraryProfileRow(picked.LibraryPluginId, picked.LibraryDisplayName, file, "slot1"));
+                SelectedDevice.LibraryProfiles.Add(new RewasdLibraryProfileRow(picked.LibraryPluginId, picked.LibraryDisplayName, profilePath, profileSlot, passthrough));
             }
         }
 
@@ -340,20 +519,31 @@ namespace RewasdProfileSwitcher.Playnite.Settings
                 return;
             }
 
-            _plugin.TestProfile(CliPath, SelectedDevice.DeviceId, row.ProfilePath, row.ProfileSlot);
+            if (row.Passthrough)
+            {
+                _plugin.TestPassthrough(CliPath, SelectedDevice.DeviceId);
+            }
+            else
+            {
+                _plugin.TestProfile(CliPath, SelectedDevice.DeviceId, row.ProfilePath, row.ProfileSlot);
+            }
         }
 
         public void BeginEdit()
         {
             _beforeIntegrationEnabled = IntegrationEnabled;
+            _beforeInstallFolder = InstallFolder;
             _beforeCliPath = CliPath;
+            _beforeProfilesFolder = ProfilesFolder;
             _beforeDevices = Devices.Select(d => d.ToModel()).ToList();
         }
 
         public void CancelEdit()
         {
             IntegrationEnabled = _beforeIntegrationEnabled;
+            InstallFolder = _beforeInstallFolder;
             CliPath = _beforeCliPath;
+            ProfilesFolder = _beforeProfilesFolder;
 
             Devices.Clear();
             foreach (var device in _beforeDevices ?? new List<RewasdDeviceSettings>())
@@ -366,7 +556,9 @@ namespace RewasdProfileSwitcher.Playnite.Settings
         public void EndEdit()
         {
             _settings.IntegrationEnabled = IntegrationEnabled;
+            _settings.InstallFolder = (InstallFolder ?? "").Trim();
             _settings.CliPath = (CliPath ?? "").Trim();
+            _settings.ProfilesFolder = (ProfilesFolder ?? "").Trim();
             _settings.Devices = Devices.Select(d => d.ToModel()).ToList();
             _plugin.SavePluginSettings(_settings);
         }
@@ -398,6 +590,28 @@ namespace RewasdProfileSwitcher.Playnite.Settings
             {
                 LibraryPluginId = libraryPluginId;
                 LibraryDisplayName = libraryDisplayName;
+            }
+        }
+
+        /// <summary>Subclassed to carry whether "Passthrough" was picked through the second AddLibraryProfile picker.</summary>
+        private sealed class LibraryModeOption : GenericItemOption
+        {
+            public bool Passthrough { get; }
+
+            public LibraryModeOption(bool passthrough, string label) : base(label, "")
+            {
+                Passthrough = passthrough;
+            }
+        }
+
+        /// <summary>Subclassed to carry the found .rewasd file's path (null for the "browse manually" entry) through <see cref="PickProfileFile"/>.</summary>
+        private sealed class ProfileFilePickerOption : GenericItemOption
+        {
+            public string FilePath { get; }
+
+            public ProfileFilePickerOption(string filePath, string label) : base(label, "")
+            {
+                FilePath = filePath;
             }
         }
     }

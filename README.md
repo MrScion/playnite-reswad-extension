@@ -9,7 +9,11 @@ Supports multiple devices at once, each with its own **default profile**
 library has no override) plus optional **per-library overrides** — e.g. one
 profile for your Steam library, a different one for another library,
 applied automatically based on which library the game that just started
-belongs to.
+belongs to. A library override can also be set to **Passthrough**, which
+turns reWASD's remap off instead of applying a profile — releasing the
+virtual controller so the real physical device is visible as-is (e.g. so
+Steam Input sees an actual Steam Controller instead of reWASD's virtual
+Xbox 360 pad).
 
 Off by default — irrelevant if you play with keyboard/mouse.
 
@@ -19,7 +23,7 @@ Single Playnite `GenericPlugin`, two projects:
 
 | Project | What it is |
 |---|---|
-| `RewasdProfileSwitcher.Core` | Pure logic (CLI invocation, profile resolution), no PlayniteSDK dependency, unit tested. |
+| `RewasdProfileSwitcher.Core` | Pure logic (CLI invocation, profile resolution, profile-file naming), no PlayniteSDK dependency, unit tested. |
 | `RewasdProfileSwitcher.Playnite` | The actual Playnite extension: settings UI, `OnGameStarting`/`OnGameStopped` hooks. |
 
 Unlike a multi-`Type` project (GameLibrary + MetadataProvider + GenericPlugin
@@ -45,10 +49,12 @@ for why), this extension is a single `GenericPlugin`, so it ships as one
     ("Copy device ID"); its command-line tool has no device-listing
     command (confirmed against reWASD's official docs).
 - **On game start**: for each configured device, applies that device's
-  profile for the started game's library if one is configured, otherwise
-  the device's default.
+  profile for the started game's library if one is configured (or turns
+  remap off, if that library is set to Passthrough), otherwise the
+  device's default profile.
 - **On game stop**: for each configured device, applies its default
-  profile (back to "desktop").
+  profile (back to "desktop") — turning remap back on first, in case the
+  game that just closed belonged to a Passthrough library.
 - Libraries are picked from ones already represented in your Playnite game
   database (grouped by `Game.PluginId`, labeled by `Game.Source.Name`) —
   there's no other way to enumerate installed library plugins from a
@@ -59,13 +65,24 @@ for why), this extension is a single `GenericPlugin`, so it ships as one
 
 Three tabs:
 
-- **General** — the master on/off switch, and the path to
-  `reWASDCommandLine.exe`.
+- **General**
+  - The master on/off switch.
+  - **reWASD installation folder** — defaults to reWASD's standard install
+    location (`C:\Program Files\reWASD`); change it if you installed
+    reWASD elsewhere. Used to auto-detect `reWASDCommandLine.exe` below.
+  - **reWASD command-line tool** — auto-detected from the folder above;
+    only browse for it manually if auto-detection didn't find it.
+  - **reWASD profiles folder** (optional) — point this at the folder
+    containing reWASD's own `Profiles` subfolder (each profile has its own
+    folder there, with a `Controller` subfolder holding its `.rewasd`
+    file(s)). Once set, the Profiles tab offers a picker of the `.rewasd`
+    files found there instead of browsing the file system by hand.
 - **Devices** — add/remove devices; the selected device's name and reWASD
   Device ID.
-- **Profiles** — the selected device's default profile + slot (with a
-  "Test" button), and its per-library profile overrides (add/remove/test
-  each one individually).
+- **Profiles** — the selected device's default profile + Slot (a
+  Slot 1–4 dropdown, with a "Test" button), and its per-library profile
+  overrides (add/remove/test each one individually, and mark any of them
+  as Passthrough instead of a profile file).
 
 ## Installation
 
@@ -74,9 +91,9 @@ Three tabs:
 2. Drag it into Playnite, or **Settings → Extensions → Install add-on...**
 3. Restart Playnite.
 4. Go to **Settings → Extensions → reWASD Profile Switcher**, enable the
-   integration on the **General** tab, point it at `reWASDCommandLine.exe`,
-   then add your device(s) on the **Devices** tab and their profiles on the
-   **Profiles** tab.
+   integration on the **General** tab, point it at reWASD's install and
+   profiles folders, then add your device(s) on the **Devices** tab and
+   their profiles on the **Profiles** tab.
 
 ### Developer / unpacked install
 
@@ -90,6 +107,9 @@ src/
   RewasdProfileSwitcher.Core/          Pure logic, no PlayniteSDK dependency
   RewasdProfileSwitcher.Core.Tests/    xUnit tests for Core
   RewasdProfileSwitcher.Playnite/      The GenericPlugin extension
+addon-database/                        Add-on/installer manifests, in the shape expected by
+                                        Playnite's official extensions database, for a future
+                                        submission there (not submitted yet)
 extras/Versiones/                      Packaged .pext releases (not tracked in git)
 ```
 

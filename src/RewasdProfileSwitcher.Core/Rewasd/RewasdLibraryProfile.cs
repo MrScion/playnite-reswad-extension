@@ -18,5 +18,15 @@ namespace RewasdProfileSwitcher.Core.Rewasd
         public string ProfilePath { get; set; } = "";
 
         public string ProfileSlot { get; set; } = "slot1";
+
+        /// <summary>
+        /// When true, a game from this library gets reWASD's remap turned
+        /// off entirely instead of a profile applied — releases the virtual
+        /// controller so the real physical device is visible to Windows/the
+        /// game as-is (e.g. so Steam Input sees an actual Steam Controller
+        /// instead of reWASD's virtual Xbox 360 pad). <see cref="ProfilePath"/>/
+        /// <see cref="ProfileSlot"/> are ignored when this is set.
+        /// </summary>
+        public bool Passthrough { get; set; }
     }
 }

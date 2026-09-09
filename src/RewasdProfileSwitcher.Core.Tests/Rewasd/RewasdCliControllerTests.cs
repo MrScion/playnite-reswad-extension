@@ -32,5 +32,30 @@ namespace RewasdProfileSwitcher.Core.Tests.Rewasd
             var missingCli = Path.Combine(Path.GetTempPath(), "RewasdProfileSwitcherTests_missing_" + Guid.NewGuid().ToString("N") + ".exe");
             Assert.ThrowsAny<Exception>(() => RewasdCliController.ApplyProfile(missingCli, "1", @"C:\profile.rewasd", "slot1"));
         }
+
+        [Theory]
+        [InlineData(true, "remap --id \"123\" --state on")]
+        [InlineData(false, "remap --id \"123\" --state off")]
+        public void BuildRemapArguments_UsesOnOrOffState(bool enabled, string expected)
+        {
+            Assert.Equal(expected, RewasdCliController.BuildRemapArguments("123", enabled));
+        }
+
+        [Theory]
+        [InlineData("", "1")]
+        [InlineData("cli.exe", "")]
+        [InlineData(null, "1")]
+        public void SetRemapState_NoOpWhenAnyRequiredParameterIsBlank(string cliPath, string deviceId)
+        {
+            // Must not throw and must not attempt to start any process.
+            RewasdCliController.SetRemapState(cliPath, deviceId, true);
+        }
+
+        [Fact]
+        public void SetRemapState_ThrowsWhenCliExecutableDoesNotExist()
+        {
+            var missingCli = Path.Combine(Path.GetTempPath(), "RewasdProfileSwitcherTests_missing_" + Guid.NewGuid().ToString("N") + ".exe");
+            Assert.ThrowsAny<Exception>(() => RewasdCliController.SetRemapState(missingCli, "1", false));
+        }
     }
 }

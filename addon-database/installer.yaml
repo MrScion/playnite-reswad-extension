@@ -1,0 +1,13 @@
+AddonId: a56345f8-1e5b-4876-8ecc-2a103fa1117a
+Packages:
+  - Version: 0.1.7
+    RequiredApiVersion: 6.16.0
+    ReleaseDate: 2026-09-09
+    PackageUrl: https://github.com/MrScion/playnite-reswad-extension/releases/download/v0.1.7/ReWasdProfileSwitcher_0.1.7.pext
+    Changelog:
+      - Added a reWASD installation folder setting (General tab) that auto-detects reWASDCommandLine.exe.
+      - Added a reWASD profiles folder setting (General tab) that offers a picker of found .rewasd files when choosing a default or per-library profile, instead of browsing the file system by hand.
+      - Slot selection is now a Slot 1-4 dropdown instead of free text.
+      - Added a Passthrough mode for per-library overrides, which turns reWASD's remap off (real device visible as-is) instead of applying a profile - useful for Steam Input to see the actual physical controller.
+      - Added detection of currently-connected gamepads to prefill a new device's name.
+      - Settings split into General / Devices / Profiles tabs.

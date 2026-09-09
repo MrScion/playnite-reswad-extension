@@ -13,10 +13,21 @@
     <sys:String x:Key="LOCRewasdSettingsHint">Cambia automáticamente el perfil o perfiles de mando de reWASD al iniciar y cerrar un juego. Desactivado por defecto — déjalo apagado si juegas con teclado/ratón.</sys:String>
     <sys:String x:Key="LOCRewasdSettingsEnable">Activar el cambio automático de perfil</sys:String>
 
+    <!-- Ajustes: carpeta de instalación -->
+    <sys:String x:Key="LOCRewasdSettingsInstallFolderHeader">Carpeta de instalación de reWASD</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsInstallFolderHint">Por defecto usa la ubicación estándar de reWASD. Cámbiala si instalaste reWASD en otro sitio — la ruta de la herramienta de línea de comandos de abajo se detecta entonces automáticamente.</sys:String>
+
     <!-- Ajustes: CLI -->
     <sys:String x:Key="LOCRewasdSettingsCliHeader">Herramienta de línea de comandos de reWASD</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsCliHint">Detectada automáticamente a partir de la carpeta de instalación de arriba. Selecciónala a mano solo si la detección automática no la encontró.</sys:String>
     <sys:String x:Key="LOCRewasdSettingsBrowse">Examinar...</sys:String>
     <sys:String x:Key="LOCRewasdCliFilter">reWASDCommandLine.exe|reWASDCommandLine.exe|Archivos ejecutables|*.exe</sys:String>
+
+    <!-- Ajustes: carpeta de perfiles -->
+    <sys:String x:Key="LOCRewasdSettingsProfilesFolderHeader">Carpeta de perfiles de reWASD</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsProfilesFolderHint">Opcional. Apunta a la carpeta que contiene la subcarpeta "Profiles" de reWASD (cada perfil tiene su propia carpeta ahí dentro, con una subcarpeta Controller donde está su(s) archivo(s) .rewasd). Una vez configurada, la pestaña Perfiles te deja elegir entre los archivos .rewasd encontrados ahí en vez de buscarlos a mano por el sistema de archivos.</sys:String>
+    <sys:String x:Key="LOCRewasdProfileFilePickerCaption">Elige un perfil de reWASD, o selecciónalo a mano</sys:String>
+    <sys:String x:Key="LOCRewasdProfileFileBrowseManually">Seleccionar a mano (elegir un archivo .rewasd)</sys:String>
 
     <!-- Ajustes: dispositivos -->
     <sys:String x:Key="LOCRewasdSettingsDevicesHeader">Dispositivos</sys:String>
@@ -46,17 +57,23 @@
     <sys:String x:Key="LOCRewasdSettingsTestDefault">Probar el perfil por defecto ahora</sys:String>
 
     <sys:String x:Key="LOCRewasdSettingsLibraryProfilesHeader">Perfiles por biblioteca (opcional)</sys:String>
-    <sys:String x:Key="LOCRewasdSettingsLibraryProfilesHint">Sustituye el perfil por defecto para los juegos de una biblioteca de Playnite en concreto — p. ej. un perfil para Steam, otro para otra biblioteca distinta.</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsLibraryProfilesHint">Sustituye el perfil por defecto para los juegos de una biblioteca de Playnite en concreto — p. ej. un perfil para Steam, otro para otra biblioteca distinta. Una biblioteca también puede marcarse como Passthrough, lo que en su lugar apaga el remap — liberando el mando virtual de reWASD para que el dispositivo físico real quede visible tal cual para esa biblioteca (p. ej. para que Steam Input vea un Steam Controller de verdad en vez de un mando virtual de Xbox 360).</sys:String>
     <sys:String x:Key="LOCRewasdSettingsAddLibraryProfile">+ Añadir perfil de biblioteca...</sys:String>
     <sys:String x:Key="LOCRewasdSettingsRemove">Quitar</sys:String>
     <sys:String x:Key="LOCRewasdSettingsTest">Probar</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsLibraryPassthroughLabel">Passthrough</sys:String>
+    <sys:String x:Key="LOCRewasdSettingsLibraryPassthroughHint">Dispositivo real tal cual — sin perfil.</sys:String>
 
     <sys:String x:Key="LOCRewasdLibraryPickerCaption">Elige una biblioteca</sys:String>
+    <sys:String x:Key="LOCRewasdLibraryModePickerCaption">¿Cómo se debe gestionar esta biblioteca?</sys:String>
+    <sys:String x:Key="LOCRewasdLibraryModeProfile">Usar un archivo de perfil</sys:String>
+    <sys:String x:Key="LOCRewasdLibraryModePassthrough">Passthrough — apagar el remap, mostrar el dispositivo real tal cual</sys:String>
     <sys:String x:Key="LOCRewasdNoLibrariesFound">No se ha encontrado ninguna biblioteca — añade al menos un juego a tu biblioteca de Playnite primero.</sys:String>
     <sys:String x:Key="LOCRewasdNoLibraryLabel">Juegos añadidos manualmente (sin biblioteca)</sys:String>
 
     <!-- Mensajes de resultado de prueba -->
     <sys:String x:Key="LOCRewasdTestOk">Perfil aplicado correctamente.</sys:String>
+    <sys:String x:Key="LOCRewasdTestPassthroughOk">Remap apagado — el dispositivo real debería verse ya tal cual.</sys:String>
     <sys:String x:Key="LOCRewasdTestErrorPrefix" xml:space="preserve">Error: </sys:String>
 
 </ResourceDictionary>
